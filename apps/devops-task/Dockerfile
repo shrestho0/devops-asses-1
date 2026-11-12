@@ -4,6 +4,10 @@
 # ==============================================================================
 FROM golang:1.27.3-alpine AS builder
 
+# Expose automatic multi-platform build arguments from Docker Buildx
+ARG TARGETOS
+ARG TARGETARCH
+
 # Set the working directory outside $GOPATH to enable module support
 WORKDIR /app
 
@@ -20,7 +24,11 @@ COPY . .
 # Build a statically linked Go binary
 # -w and -s strip debugging information to reduce binary size
 # CGO_ENABLED=0 ensures the binary is statically linked and doesn't rely on host C libraries
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /app/server ./cmd/api
+# RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /app/server ./cmd/api
+
+# Use the dynamic arguments instead of hardcoding GOOS=linux GOARCH=amd64
+RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH:-amd64} go build -ldflags="-w -s" -o /app/server ./cmd/api
+
 # ==============================================================================
 # Stage 2: Final minimal image
 # ==============================================================================
