@@ -9,11 +9,59 @@ permissions:
   contents: read
 
 jobs:
+  version:
+    name: Compute semantic version
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: release-version
+      cancel-in-progress: false
+    outputs:
+      version: ${{ steps.semver.outputs.version }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute and push next version tag
+        id: semver
+        run: |
+          set -euo pipefail
+
+          EXISTING=$(git tag --points-at HEAD --list 'v[0-9]*.[0-9]*.[0-9]*' | head -n1)
+          if [ -n "$EXISTING" ]; then
+            echo "version=${EXISTING#v}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          LAST=$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1)
+          LAST=${LAST:-v0.0.0}
+          IFS=. read -r MAJOR MINOR PATCH <<< "${LAST#v}"
+
+          MSG=$(git log -1 --pretty=%B)
+          case "$MSG" in
+            *"[major]"*) MAJOR=$((MAJOR+1)); MINOR=0; PATCH=0 ;;
+            *"[minor]"*) MINOR=$((MINOR+1)); PATCH=0 ;;
+            *)           PATCH=$((PATCH+1)) ;;
+          esac
+          NEXT="${MAJOR}.${MINOR}.${PATCH}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "v${NEXT}" -m "Release v${NEXT}"
+          git push origin "v${NEXT}"
+          echo "version=${NEXT}" >> "$GITHUB_OUTPUT"
   build-and-push:
     name: Build, Tag, and Push to ECR
+    needs: version
     runs-on: ubuntu-latest
+    # outputs:
+    #   image_tag: ${{ steps.meta.outputs.version }}
     outputs:
-      image_tag: ${{ steps.meta.outputs.version }}
+      image_tag: sha-${{ github.sha }}
+      app_version: v${{ needs.version.outputs.version }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -41,8 +89,8 @@ jobs:
           images: ${{ steps.login-ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY_NAME }}
           tags: |
             type=sha,format=long
-            type=raw,value=v1.0.${{ github.run_number }}
-
+            type=raw,value=v${{ needs.version.outputs.version }}
+      
       - name: Build and Push Multi-Arch Image
         uses: docker/build-push-action@v5
         with:

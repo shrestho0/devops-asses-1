@@ -1,2 +1,7 @@
 xx.xx
 dumbcat.sh
+
+
+**/.terraform/*
+*.tfstate
+*.tfstate.*

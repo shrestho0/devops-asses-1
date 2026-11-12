@@ -1,0 +1,27 @@
+[0m[1mdata.aws_vpc.default: Reading...[0m[0m
+[0m[1mdata.aws_ssm_parameter.al2023_ami: Reading...[0m[0m
+[0m[1mdata.aws_iam_policy_document.ec2_assume: Reading...[0m[0m
+[0m[1mdata.aws_ecr_repository.app: Reading...[0m[0m
+[0m[1maws_cloudwatch_log_group.app: Refreshing state... [id=/devops-task/staging][0m
+[0m[1mdata.aws_iam_policy_document.ec2_assume: Read complete after 0s [id=2851119427][0m
+[0m[1maws_iam_role.instance: Refreshing state... [id=devops-task-staging-instance-role][0m
+[0m[1mdata.aws_ssm_parameter.al2023_ami: Read complete after 1s [id=/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64][0m
+[0m[1mdata.aws_ecr_repository.app: Read complete after 1s [id=devops-task][0m
+[0m[1mdata.aws_iam_policy_document.instance: Reading...[0m[0m
+[0m[1mdata.aws_iam_policy_document.instance: Read complete after 0s [id=2764621119][0m
+[0m[1maws_iam_role_policy_attachment.ssm_core: Refreshing state... [id=devops-task-staging-instance-role/arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore][0m
+[0m[1maws_iam_role_policy.instance: Refreshing state... [id=devops-task-staging-instance-role:devops-task-staging-instance-policy][0m
+[0m[1maws_iam_instance_profile.instance: Refreshing state... [id=devops-task-staging-instance-profile][0m
+[0m[1mdata.aws_vpc.default: Read complete after 2s [id=vpc-0afa224ec7f37be76][0m
+[0m[1mdata.aws_subnets.default: Reading...[0m[0m
+[0m[1maws_security_group.app: Refreshing state... [id=sg-06b06d88f27be460c][0m
+[0m[1mdata.aws_subnets.default: Read complete after 0s [id=us-east-2][0m
+[0m[1maws_instance.app: Refreshing state... [id=i-080896d58a4659adf][0m
+
+[0m[1m[32mNo changes.[0m[1m Your infrastructure matches the configuration.[0m
+
+[0mTerraform has compared your real infrastructure against your configuration
+and found no differences, so no changes are needed.
+Releasing state lock. This may take a few moments...
+[0m[1m[32m
+Apply complete! Resources: 0 added, 0 changed, 0 destroyed.[0m

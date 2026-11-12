@@ -1,0 +1,21 @@
+#!/bin/bash
+set -euxo pipefail
+
+dnf install -y docker
+systemctl enable --now docker
+
+mkdir -p /opt/devops-task
+cat > /opt/devops-task/deploy.conf <<'EOF'
+REGION="${region}"
+REGISTRY="${registry}"
+LOG_GROUP="${log_group}"
+ENV_NAME="${environment}"
+APP_PORT="${app_port}"
+EOF
+
+echo '${deploy_script_b64}' | base64 -d > /usr/local/bin/deploy-app.sh
+chmod 0755 /usr/local/bin/deploy-app.sh
+
+%{ if initial_image != "" ~}
+/usr/local/bin/deploy-app.sh "${initial_image}" || echo "initial deploy failed, CI will deploy"
+%{ endif ~}
