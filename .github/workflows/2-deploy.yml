@@ -104,55 +104,55 @@ jobs:
           cache-to: type=gha,mode=max
 
 
-    deploy:
-      name: Deploy to EC2 via SSM
-      needs: build-and-push
-      runs-on: ubuntu-latest
-      concurrency:
-        group: deploy-ec2
-        cancel-in-progress: false
-      steps:
-        - name: Configure AWS Credentials via OIDC
-          uses: aws-actions/configure-aws-credentials@v4
-          with:
-            role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }}
-            aws-region: ${{ vars.AWS_REGION }}
+  deploy:
+    name: Deploy to EC2 via SSM
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-ec2
+      cancel-in-progress: false
+    steps:
+      - name: Configure AWS Credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_OIDC_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
 
-        - name: Login to Amazon ECR
-          id: login-ecr
-          uses: aws-actions/amazon-ecr-login@v2
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
-        - name: Deploy via SSM (host smoke tests and rolls back on failure)
-          env:
-            INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
-            APP_VERSION: ${{ needs.build-and-push.outputs.app_version }}
-            IMAGE: ${{ steps.login-ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY_NAME }}:${{ needs.build-and-push.outputs.image_tag }}
-          run: |
-            CMD_ID=$(aws ssm send-command \
-              --document-name "AWS-RunShellScript" \
-              --instance-ids "$INSTANCE_ID" \
-              --parameters "commands=[\"/usr/local/bin/deploy-app.sh ${IMAGE} ${APP_VERSION}\"]" \
-              --timeout-seconds 300 \
-              --comment "deploy ${APP_VERSION}" \
-              --query "Command.CommandId" --output text)
+      - name: Deploy via SSM (host smoke tests and rolls back on failure)
+        env:
+          INSTANCE_ID: ${{ vars.EC2_INSTANCE_ID }}
+          APP_VERSION: ${{ needs.build-and-push.outputs.app_version }}
+          IMAGE: ${{ steps.login-ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY_NAME }}:${{ needs.build-and-push.outputs.image_tag }}
+        run: |
+          CMD_ID=$(aws ssm send-command \
+            --document-name "AWS-RunShellScript" \
+            --instance-ids "$INSTANCE_ID" \
+            --parameters "commands=[\"/usr/local/bin/deploy-app.sh ${IMAGE} ${APP_VERSION}\"]" \
+            --timeout-seconds 300 \
+            --comment "deploy ${APP_VERSION}" \
+            --query "Command.CommandId" --output text)
 
-            STATUS="Pending"
-            for _ in $(seq 1 60); do
-              STATUS=$(aws ssm get-command-invocation \
-                --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" \
-                --query Status --output text 2>/dev/null || echo Pending)
-              case "$STATUS" in
-                Success|Failed|Cancelled|TimedOut) break ;;
-              esac
-              sleep 5
-            done
-
-            echo "---- host output ----"
-            aws ssm get-command-invocation \
+          STATUS="Pending"
+          for _ in $(seq 1 60); do
+            STATUS=$(aws ssm get-command-invocation \
               --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" \
-              --query StandardOutputContent --output text
+              --query Status --output text 2>/dev/null || echo Pending)
+            case "$STATUS" in
+              Success|Failed|Cancelled|TimedOut) break ;;
+            esac
+            sleep 5
+          done
 
-            if [ "$STATUS" != "Success" ]; then
-              echo "Deploy failed with status ${STATUS} (host rolled back to the previous image if one existed)"
-              exit 1
-            fi
+          echo "---- host output ----"
+          aws ssm get-command-invocation \
+            --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" \
+            --query StandardOutputContent --output text
+
+          if [ "$STATUS" != "Success" ]; then
+            echo "Deploy failed with status ${STATUS} (host rolled back to the previous image if one existed)"
+            exit 1
+          fi
