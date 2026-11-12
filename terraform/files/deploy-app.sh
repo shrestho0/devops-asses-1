@@ -41,9 +41,20 @@ run_container() {
     "${image}" >/dev/null
 }
 
+# smoke_test() {
+#   local i
+#   for i in $(seq 1 15); do
+#     if curl -fsS --max-time 3 "http://localhost:${APP_PORT}/health" >/dev/null; then
+#       return 0
+#     fi
+#     sleep 2
+#   done
+#   return 1
+# }
+
+
 smoke_test() {
-  local i
-  for i in $(seq 1 15); do
+  for _ in {1..15}; do
     if curl -fsS --max-time 3 "http://localhost:${APP_PORT}/health" >/dev/null; then
       return 0
     fi
@@ -51,6 +62,7 @@ smoke_test() {
   done
   return 1
 }
+
 
 PREV_IMAGE=""
 PREV_VERSION=""
