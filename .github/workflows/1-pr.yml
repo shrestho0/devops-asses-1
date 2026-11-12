@@ -1,0 +1,71 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint-and-test:
+    name: Code Lint & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.x'
+          cache: true
+          cache-dependency-path: apps/devops-task/go.sum
+
+      - name: Run GolangCI-Lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: 'v2.15.0'
+          working-directory: apps/devops-task
+
+      - name: Unit Tests & Coverage
+        working-directory: ./apps/devops-task
+        run: |
+          go test -v -coverprofile=coverage.out ./...
+          go tool cover -func=coverage.out
+
+  docker-and-shell-lint:
+    name: Docker & Shell Linting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      
+      - name: Lint Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: apps/devops-task/Dockerfile
+          ignore: DL3018 # Ignoring for as Pinning breaks future builds
+
+      - name: Lint Shell Scripts
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: './'
+
+  build-and-scan:
+    name: Docker Build & Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Build Local Image for Scan
+        working-directory: ./apps/devops-task
+        run: docker build -t devops-task:test .
+
+      - name: Run Trivy Vulnerability Scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'devops-task:test'
+          format: 'table'
+          exit-code: '1' # Fails the pipeline
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL'

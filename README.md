@@ -31,7 +31,7 @@ This project utilizes a multi-stage Dockerfile to ensure strict security and min
 
 - **Final Image Size:** **~XXX MB** 
   *(~7.5 MB for the Alpine base layer + ~10 MB for the statically linked, stripped Go binary)*
-- **Base Image:** `alpine:3.20.2` (Pinned strictly via SHA256 digest)
+- **Base Image:** `alpine:3.21` (Pinned strictly via versioning)
 - **Security:** 
   - Runs as an unprivileged, non-root user (`appuser`).
   - Binary is statically linked (`CGO_ENABLED=0`) shrinking the attack surface.

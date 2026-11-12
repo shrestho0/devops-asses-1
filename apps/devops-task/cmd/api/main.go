@@ -149,12 +149,15 @@ func rootHandler(cfg Config) http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{
+		if err:=json.NewEncoder(w).Encode(map[string]string{
 			"message":     "Hello from DevOps Task!",
 			"status":      "running",
 			"version":     cfg.AppVer,
 			"environment": cfg.EnvName,
-		})
+		}); err!= nil {
+			slog.Error("Failed to write response", slog.String("error", err.Error()))
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		}
 	}
 }
 
@@ -162,7 +165,9 @@ func rootHandler(cfg Config) http.HandlerFunc {
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{"status": "ok", "message": "Service is healthy"}`))
+	if  _, err := w.Write([]byte(`{"status": "ok", "message": "Service is healthy"}`)); err!=nil {
+		return 
+	}
 }
 
 func main() {
