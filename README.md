@@ -52,3 +52,5 @@ docker run -d \
   -e LOG_LEVEL=info \
   -e ENV_NAME=production \
   devops-task:v1
+
+Remove the container: docker rm -f devops-task-app

@@ -1,8 +1,8 @@
 # ==============================================================================
 # Stage 1: Builder
-# Pinning to a specific Alpine-based Go image via SHA256 digest for immutability
+# Using specific Alpine-based Go image via version tag
 # ==============================================================================
-FROM golang:1.22.5-alpine3.20@sha256:0dca25b2bc21db2b2cc9fc9161cd8c16067b5eb46d0a7a0ec947df8dd0db9df6 AS builder
+FROM golang:1.27.3-alpine AS builder
 
 # Set the working directory outside $GOPATH to enable module support
 WORKDIR /app
@@ -20,12 +20,11 @@ COPY . .
 # Build a statically linked Go binary
 # -w and -s strip debugging information to reduce binary size
 # CGO_ENABLED=0 ensures the binary is statically linked and doesn't rely on host C libraries
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /app/server .
-
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /app/server ./cmd/api
 # ==============================================================================
 # Stage 2: Final minimal image
 # ==============================================================================
-FROM alpine:3.20.2@sha256:0a4eaa0eecf5f8c050e5bba433f58c052be7587ee8af3e8b3910ef9ab5fbe9f5
+FROM alpine:3.20.2
 
 # OCI standard labels
 LABEL org.opencontainers.image.title="DevOps Task Web Service" \
