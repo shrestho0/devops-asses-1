@@ -1,3 +1,5 @@
+
+
 ## 1. Setting up the infra
 
 terraform init -backend-config=envs/staging.backend.hcl
@@ -49,5 +51,16 @@ Also, v1.0.4's deployment is unaffected.
 
 
 Now, fixing it again to ensure, it rollouts successfully to v1.0.6, as, v1.0.5 artifact is failing one.  This time, with a pr. 
+
+ PR checks successful
+ https://github.com/shrestho0/devops-asses-1/actions/runs/43391461522
+
+
+Deployment logs from cloudwatch
+![alt text](./assets/7-cloudwatch-trailing.png)
+
+Deployment live
+![alt text](./assets/8-successful-deployment.png)
+
 
 

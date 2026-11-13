@@ -1,0 +1,4 @@
+args:
+  - --kubelet-insecure-tls
+
+# This disables kubelet certificate verification. It is specifically a local kind workaround, not a production security setting
