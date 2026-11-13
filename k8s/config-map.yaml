@@ -1,0 +1,13 @@
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: devops-task-config
+#   namespace: devops-task
+
+# data:
+#   PORT: "8080"
+#   LOG_LEVEL: "debug"
+#   ENV_NAME: "local_k8s"
+#   APP_VERSION: "1.0.0"
+
+## Now, handling using kustomization.yml

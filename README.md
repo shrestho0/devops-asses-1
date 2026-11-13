@@ -1,56 +1,65 @@
-# devops-asses-1
 
 
-## Development
-### App Dir:
+Step 7: Documentation (README.md)
+Your README must let a reviewer run everything without guessing. Include:
+1. Prerequisites and step-by-step instructions to run the app and the observability stack locally
+with docker compose up, including how to access Grafana and the dashboards.
 
-cd apps/devops-task
+docker awscli terraform gh (optional), 
 
-### Entry point: 
+Report for each type of deployment and screenshots inside ./reports/
+as:
+...
 
-apps/cmd/api/main.go 
+Local dev:
 
-### Run 
-
-PORT="9090" ENV_NAME="production" LOG_LEVEL="debug" APP_VERSION="2.0.0" go run cmd/api/main.go
-
-### Test (General, all cases)
-
-go test -v ./...
-
-Testing with race condition check
-go test -v -race ./...
-
-Repeated flaky test 
-go test -v -race -count 10 ./...
+1. For running the app locally
+docker compose up, runs the app (default port 8080) 
 
 
-## Docker Image Specifications
 
-This project utilizes a multi-stage Dockerfile to ensure strict security and minimal resource footprint. 
+2. Instructions for running the tests, the health script, the Terraform code, and the Kubernetes
+deployment.
 
-- **Final Image Size:** **~XXX MB** 
-  *(~7.5 MB for the Alpine base layer + ~10 MB for the statically linked, stripped Go binary)*
-- **Base Image:** `alpine:3.21` (Pinned strictly via versioning)
-- **Security:** 
-  - Runs as an unprivileged, non-root user (`appuser`).
-  - Binary is statically linked (`CGO_ENABLED=0`) shrinking the attack surface.
-- **Resilience:** Includes a native Docker `HEALTHCHECK` probing the `/health` endpoint every 30 seconds.
+env selection: staging, prod
+terraform init -backend-config=envs/staging.backend.hcl
+terraform plan -var-file=envs/staging.tfvars
+terraform apply -var-file=envs/staging.tfvars
+
+terraform destroy -var-file=envs/staging.tfvars
 
 
-### Build and Run
+3. An architecture diagram covering Code Commit → CI (lint, test, scan) → Registry → Deployment
+to EC2, along with the Kubernetes deployment flow and the observability stack (how metrics
+and logs flow from the app and host into Grafana).
+4. A Design Decisions section explaining key trade-offs (e.g. distroless vs Alpine, EC2 vs ECS vs
+EKS, your tagging and secrets strategy, log label choices).
+5. A Deployment & Rollback Strategy section: how a release reaches production safely, and
+how you would roll back.
+6. A Security Considerations section covering secrets management, image scanning, IAM, and
+network exposure.
 
-```bash
-# Build the image
-docker build -t devops-task:v1 .
+Used Github OIDC with AWS IAM with Least Privilege. 
 
-# Run the container (passing environment variables)
-docker run -d \
-  --name devops-task-app \
-  -p 8080:8080 \
-  -e PORT=8080 \
-  -e LOG_LEVEL=info \
-  -e ENV_NAME=production \
-  devops-task:v1
+Image scanning follows xxx, intentionally suppresses YY to ZZZ. 
 
-Remove the container: docker rm -f devops-task-app
+
+
+
+7. A rough monthly AWS cost estimate for running this in production.
+
+For ec2 based deployment,
+estimated cost:
+...
+
+8. A What I would improve with more time section.
+
+With more time, 
+i would improve it by going through a checklist of testing and chaos engineering to 
+push it's limit, calculate ~exact numbers of rps, limits, errors spikes and thorttling it on different percentile to get more detailed scenaiors how it will work under pressure and high load. 
+Load balancing for different layers and similar...
+
+9. A short note on whether and how you used AI tools during this task. Using them is allowed; we
+only ask that you can explain every part of your submission.
+
+Most of the code parts are generated using with deliberate instructions with task context. And, each part is hand checked, and reports generated are inside ./reports/ with codes for steps producing each. 

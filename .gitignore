@@ -5,3 +5,7 @@ dumbcat.sh
 **/.terraform/*
 *.tfstate
 *.tfstate.*
+
+
+*.env
+!*.env.example
