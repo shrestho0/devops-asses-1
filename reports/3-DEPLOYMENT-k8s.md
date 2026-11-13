@@ -67,7 +67,7 @@ and
 wrk -t16 -c200 -d2400s --latency http://127.0.0.1:30080/
 
 Show normalized log/data from:
-../../live_hpa.txt
+./logs/live_hpa.txt
 
 test 1:
 scaled up to 5, then 6,
@@ -92,7 +92,7 @@ kubectl apply -k k8s/
 
 Rollout at
 Fri Nov 13 06:34:40 PM UTC 2026
-../../live_traffic.txt has log at near line: 21 (2026-11-13T18:34:28.511+00:00)
+./logs/live_traffic.txt has log at near line: 21 (2026-11-13T18:34:28.511+00:00)
 
 4. Rollout undo at,
 
@@ -101,7 +101,7 @@ kubectl rollout undo deployment/devops-task \
 
   Fri Nov 13 06:37:28 PM UTC 2026
 
-../../live_traffic.txt log shows the output at near line: 119 (2026-11-13T18:37:47.214+00:00)
+./logs/live_traffic.txt log shows the output at near line: 119 (2026-11-13T18:37:47.214+00:00)
 
 
 
