@@ -34,13 +34,20 @@ Create pr or push to main.
 
 If fails must rollback to older version
 
-Generating a failure by, returning 500 from health route, temorarily.
+Generating a failure by, returning 500 from health route, temorarily. Updated the code such that it does not fail on pr checks, but, fails on health check on deployment from terraform/files/deploy-app.sh's smoke test.
 
 ![code change](./assets/4-code-change.png)
 
 ![failure generated locally](./assets/5-failure-generated.png)
 
 So, on push/pr, it should fail. As, we are genearting failure, we'll push to main and see if
-it breaks and deployment is preserved to current version v1.0.4.
+it breaks and deployment is preserved to current version v1.0.4. 
+
+![rollbacks on failure](./assets/6-rollback-on-failure.png)
+
+Also, v1.0.4's deployment is unaffected. 
+
+
+Now, fixing it again to ensure, it rollouts successfully to v1.0.6, as, v1.0.5 artifact is failing one.  This time, with a pr. 
 
 

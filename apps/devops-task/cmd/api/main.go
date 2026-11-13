@@ -162,23 +162,23 @@ func rootHandler(cfg Config) http.HandlerFunc {
 }
 
 // healthHandler is the liveness/readiness check
-// func healthHandler(w http.ResponseWriter, r *http.Request) {
-// 	w.Header().Set("Content-Type", "application/json")
-// 	w.WriteHeader(http.StatusOK)
-// 	if  _, err := w.Write([]byte(`{"status": "ok", "message": "Service is healthy"}`)); err!=nil {
-// 		return 
-// 	}
-// }
-
-
-// healthHandlerWillFail for generating failure
-func healthHandlerWillFail(w http.ResponseWriter, r *http.Request) {
+func healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusInternalServerError)
-	if  _, err := w.Write([]byte(`{"status": "error", "message": "Service is failing, by choice"}`)); err!=nil {
+	w.WriteHeader(http.StatusOK)
+	if  _, err := w.Write([]byte(`{"status": "ok", "message": "Service is healthy"}`)); err!=nil {
 		return 
 	}
 }
+
+
+// healthHandlerWillFail for generating failure
+// func healthHandlerWillFail(w http.ResponseWriter, r *http.Request) {
+// 	w.Header().Set("Content-Type", "application/json")
+// 	w.WriteHeader(http.StatusInternalServerError)
+// 	if  _, err := w.Write([]byte(`{"status": "error", "message": "Service is failing, by choice"}`)); err!=nil {
+// 		return 
+// 	}
+// }
 
 func main() {
 	// 1. Initialize configuration and structured logger
@@ -195,8 +195,8 @@ func main() {
 	// 2. Setup router
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", metricsMiddleware("/", rootHandler(cfg)))
-	// mux.HandleFunc("/health", metricsMiddleware("/health", healthHandler))
-	mux.HandleFunc("/health", metricsMiddleware("/health", healthHandlerWillFail))
+	mux.HandleFunc("/health", metricsMiddleware("/health", healthHandler))
+	// mux.HandleFunc("/health", metricsMiddleware("/health", healthHandlerWillFail))
 	mux.Handle("/metrics", promhttp.Handler())
 
 	// 3. Configure HTTP Server
