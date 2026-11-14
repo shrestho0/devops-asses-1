@@ -9,3 +9,6 @@ dumbcat.sh
 
 *.env
 !*.env.example
+
+
+health_log.txt
