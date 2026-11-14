@@ -248,3 +248,190 @@ helm uninstall metrics-server -n kube-system
 Delete the local cluster:
 
 kind delete cluster --name devops-local
+
+
+Build the app
+
+docker build \
+  -t devops-task:1.0.0 \
+  -f apps/devops-task/Dockerfile \
+  apps/devops-task
+
+
+docker images devops-task
+
+333. Load to kind.
+
+kind load docker-image \
+  devops-task:1.0.0 \
+  --name devops-local
+
+
+—->>>
+root@localhost:~/devops-asses-1# kind load docker-image \
+  devops-task:1.0.0 \
+  --name devops-local
+
+
+Image: "devops-task:1.0.0" with ID "sha256:6a6033cbe9f22b05c750e693cd83201bc9ae066f809baa63d64a1aac27ed1dbb" not yet present on node "devops-local-control-plane", loading...
+root@localhost:~/devops-asses-1# kind load docker-image   devops-task:1.0.0   --name devops-local
+Image: "devops-task:1.0.0" with ID "sha256:6a6033cbe9f22b05c750e693cd83201bc9ae066f809baa63d64a1aac27ed1dbb" not yet present on node "devops-local-control-plane", loading...
+root@localhost:~/devops-asses-1# 
+
+<<<
+Verify image loaded in kind
+docker exec devops-local-control-plane \
+  crictl images | grep devops-task
+
+
+
+Deploy everything
+
+kubectl kustomize k8s/
+Then, deploy,
+kubectl apply -k k8s/
+
+
+kubectl get all -n devops-task
+root@localhost:~/devops-asses-1# kubectl get all -n devops-task
+NAME                              READY   STATUS    RESTARTS   AGE
+pod/devops-task-84cc6448b-4f829   1/1     Running   0          36s
+pod/devops-task-84cc6448b-6rkc8   1/1     Running   0          37s
+pod/devops-task-84cc6448b-wgcmx   1/1     Running   0          36s
+
+NAME                  TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+service/devops-task   ClusterIP   10.96.137.39   <none>        80/TCP    37s
+
+NAME                          READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/devops-task   3/3     3            3           37s
+
+NAME                                    DESIRED   CURRENT   READY   AGE
+replicaset.apps/devops-task-84cc6448b   3         3         3       37s
+
+NAME                                              REFERENCE                TARGETS              MINPODS   MAXPODS   REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/devops-task   Deployment/devops-task   cpu: <unknown>/70%   3         6         3          37s
+root@localhost:~/devops-asses-1# 
+
+
+So, things are ready. 
+
+Now, 
+Initialize the 3 replica,
+kubectl scale deployment devops-task \
+  --replicas=3 \
+  -n devops-task
+
+Says, scaled. 
+… check for readiness
+
+root@localhost:~/devops-asses-1# kubectl rollout status deployment/devops-task \
+  -n devops-task \
+  --timeout=120s
+deployment "devops-task" successfully rolled out
+root@localhost:~/devops-asses-1# 
+
+root@localhost:~/devops-asses-1# kubectl get all -n devops-task
+
+kubectl get hpa -n devops-task
+NAME                              READY   STATUS    RESTARTS   AGE
+pod/devops-task-84cc6448b-4f829   1/1     Running   0          2m34s
+pod/devops-task-84cc6448b-6rkc8   1/1     Running   0          2m35s
+pod/devops-task-84cc6448b-wgcmx   1/1     Running   0          2m34s
+
+NAME                  TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+service/devops-task   ClusterIP   10.96.137.39   <none>        80/TCP    2m35s
+
+NAME                          READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/devops-task   3/3     3            3           2m35s
+
+NAME                                    DESIRED   CURRENT   READY   AGE
+replicaset.apps/devops-task-84cc6448b   3         3         3       2m35s
+
+NAME                                              REFERENCE                TARGETS       MINPODS   MAXPODS  REPLICAS   AGE
+horizontalpodautoscaler.autoscaling/devops-task   Deployment/devops-task   cpu: 1%/70%   3         6  3          2m35s
+NAME          REFERENCE                TARGETS       MINPODS   MAXPODS   REPLICAS   AGE
+devops-task   Deployment/devops-task   cpu: 1%/70%   3         6         3          2m36s
+root@localhost:~/devops-asses-1# 
+
+
+Now, as things are running, 
+Now, 
+
+kubectl port-forward \
+  -n devops-task \
+  service/devops-task \
+  8080:80
+
+
+
+Step 14. Verify autoscaling
+Check current resource consumption:
+kubectl top pods -n devops-task
+Check HPA:
+kubectl get hpa -n devops-task --watch
+The target is 70% CPU utilization.
+For this application, CPU utilization is calculated against the 100m CPU request.
+For example:
+35m CPU usage = 35%.
+70m CPU usage = 70%.
+90m CPU usage = 90%.
+The HPA may increase replicas when sustained utilization exceeds the target. It is not guaranteed to scale just because a request arrives; sufficient CPU load is required.
+
+
+Testing it
+
+  
+
+So, that might not be the way to test cpu load
+
+So, now, 
+kubectl get pods -A
+Example: devops-task-84cc6448b-4f829
+
+Generate load:
+kubectl exec -it -- sh -c 'yes > /dev/null &'
+
+So, overall. 
+For 2 instances, with generated cpu load, this scales up and down with a time duration. 
+
+Now, 
+Demonstrate a zero-downtime rolling update to a new image version, and a rollback using
+kubectl rollout undo. Include the commands and output in the README.
+
+
+docker build \
+  -t devops-task:1.0.1 \
+  -f apps/devops-task/Dockerfile \
+  apps/devops-task
+
+Load to kind,
+
+kind load docker-image \
+  devops-task:1.0.1 \
+  --name devops-local
+
+Verify image loaded,
+docker exec devops-local-control-plane \
+  crictl images | grep devops-task
+
+Portforward using
+Used nodeport, and forwarded with kind-config
+root@localhost:~/devops-asses-1# kubectl exec -it -n devops-task devops-task-84cc6448b-nlh9b -- sh -c 'yes'
+
+
+Next:
+1. 
+
+
+
+
+Demonstrate a zero-downtime rolling update to a new image version, and a rollback using
+kubectl rollout undo. Include the commands and output in the README.
+
+Generated Load
+
+
+
+
+
+

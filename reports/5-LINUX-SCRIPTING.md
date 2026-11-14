@@ -1,4 +1,29 @@
 
+
+
+cd scripts/system_health_check/
+./system_health.sh
+
+Options:
+  --cpu PERCENT       CPU warning threshold (default: 90)
+  --mem PERCENT       Memory warning threshold (default: 85)
+  --disk PERCENT      Per-filesystem disk warning threshold (default: 80)
+  --log-file PATH     Log file path (default: health_log.txt beside the script)
+  --json              Print the report as JSON to stdout
+  --help              Show this help
+
+Exit codes:
+  0  All metrics are within thresholds
+  1  One or more warning thresholds were exceeded
+  2  A collection, configuration, or logging error occurred
+
+
+
+
+
+
+
+--------
 1. CPU Usage
 
 Linux provides CPU counters through:
