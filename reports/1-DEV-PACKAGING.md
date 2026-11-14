@@ -1,6 +1,5 @@
-# devops-asses-1
 
-## 1. Development
+## 1-DEV-PACKAGING
 
 ### Application Directory
 
