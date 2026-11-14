@@ -1,6 +1,4 @@
 
-
-Step 7: Documentation (README.md)
 Your README must let a reviewer run everything without guessing. Include:
 1. Prerequisites and step-by-step instructions to run the app and the observability stack locally
 with docker compose up, including how to access Grafana and the dashboards.
@@ -21,7 +19,14 @@ docker compose up, runs the app (default port 8080)
 2. Instructions for running the tests, the health script, the Terraform code, and the Kubernetes
 deployment.
 
-env selection: staging, prod
+Github Repo Variables
+AWS_REGION: aws region
+EC2_INSTANCE_ID # ec2 instance id, found afrer terraform appy. 
+ECR_REPOSITORY_NAME  #container registry repo name
+
+
+env selection: staging, prod. 
+
 terraform init -backend-config=envs/staging.backend.hcl
 terraform plan -var-file=envs/staging.tfvars
 terraform apply -var-file=envs/staging.tfvars
@@ -34,8 +39,12 @@ to EC2, along with the Kubernetes deployment flow and the observability stack (h
 and logs flow from the app and host into Grafana).
 4. A Design Decisions section explaining key trade-offs (e.g. distroless vs Alpine, EC2 vs ECS vs
 EKS, your tagging and secrets strategy, log label choices).
+
 5. A Deployment & Rollback Strategy section: how a release reaches production safely, and
 how you would roll back.
+
+
+
 6. A Security Considerations section covering secrets management, image scanning, IAM, and
 network exposure.
 

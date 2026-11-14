@@ -106,6 +106,47 @@ kubectl rollout undo deployment/devops-task \
 
 
 
+4. Local vs AWS 
+
+
+| Area | Local (kind) | Production (EKS) |
+| --- | --- | --- |
+| Cluster | kind | Amazon EKS |
+| Image | Local Docker image | Amazon ECR |
+| External traffic | Port-forward | AWS Load Balancer Controller / ALB |
+| Secrets | Kubernetes Secret | AWS Secrets Manager + CSI or External Secrets |
+| Secret encryption | Local cluster defaults | AWS KMS encryption |
+| Node scaling | Local node | Karpenter or Cluster Autoscaler |
+| Workload identity | Local service account | EKS Pod Identity or IRSA |
+| Metrics | Metrics Server | Metrics Server plus monitoring stack |
+| Networking | kind networking | VPC, subnets, security groups |
+
+
+
+Additional production requirements:
+
+Use an appropriate ingress or Gateway API implementation.
+
+Establish backups, disaster recovery and deployment monitoring.
+
+Configure centralized logging and monitoring, full observibility setup.
+
+Configure workload resource requests based on observed usage.
+
+
+Configure multiple availability zones.
+
+Use managed or appropriately configured node groups.
+
+
+Apply network policies and least-privilege IAM permissions.
+
+
+Use an external secrets-management system.
+
+
+
+
 ## Architecture
 
 
@@ -192,3 +233,18 @@ flowchart TB
     class K,RES,GEN,IMG,APPLY deploy
 
 ```
+
+
+ 
+
+Remove the application:
+
+kubectl delete -k k8s/
+
+Remove Metrics Server:
+
+helm uninstall metrics-server -n kube-system
+
+Delete the local cluster:
+
+kind delete cluster --name devops-local
