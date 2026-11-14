@@ -1,0 +1,57 @@
+groups:
+  - name: devops-task-alerts
+    rules:
+      - alert: AppDown
+        expr: up{job="app"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Application target is down"
+          description: "Prometheus failed to scrape app:8080 for more than 1 minute."
+
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum(rate(http_requests_errors_total{status=~"5.."}[5m]))
+            /
+            sum(rate(http_requests_total[5m]))
+          ) > 0.05
+          and
+          sum(rate(http_requests_total[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High HTTP 5xx error rate (> 5%)"
+          description: "5xx error ratio exceeded 5% over 5m (current value: {{ $value | humanizePercentage }})."
+
+      - alert: HostDiskHigh
+        expr: |
+          (
+            1 - (
+              node_filesystem_avail_bytes{mountpoint="/",fstype!~"tmpfs|overlay"}
+              /
+              node_filesystem_size_bytes{mountpoint="/",fstype!~"tmpfs|overlay"}
+            )
+          ) > 0.80
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Host root filesystem usage > 80%"
+          description: "Root mount / is {{ $value | humanizePercentage }} full."
+
+      - alert: ContainerMemoryNearLimit
+        expr: |
+          (
+            container_memory_working_set_bytes{name!=""}
+            /
+            (container_spec_memory_limit_bytes{name!=""} > 0)
+          ) > 0.90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container {{ $labels.name }} memory > 90% of limit"
+          description: "Container {{ $labels.name }} working set is at {{ $value | humanizePercentage }} of its cgroup memory limit."
