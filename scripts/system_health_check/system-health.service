@@ -1,0 +1,9 @@
+[Unit]
+Description=Collect Linux system health metrics
+After=local-fs.target
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/local/sbin/system_health.sh --cpu 90 --mem 85 --disk 80 --log-file /var/log/system-health/health_log.txt
+
